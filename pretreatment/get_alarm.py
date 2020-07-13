@@ -8,7 +8,7 @@ path_dct = {'test': './data/test/%d',
             'node_list': [list(range(0, 100)), list(range(0, 20))]}
 
 
-class alarm_info(object):
+class AlarmInfo(object):
     def __init__(self):
         self.alarm_type = {}
         self.alarm_list = []
@@ -57,7 +57,7 @@ class alarm_info(object):
                                            'ping延迟时间持续3分钟大于100ms': 'ping延迟时间长'}, regex=True, inplace=True)
             self.train.drop(["triggername"], axis=1, inplace=True)
             self.coding()
-            self.train.to_csv(f"./data/new_train/{j}.csv", encoding="utf-8")
+            self.train.to_csv(f"./data/new_train/{j}.csv", encoding="utf-8", index=False)
             self.name = []
             self.trigger = []
 
@@ -117,8 +117,18 @@ class alarm_info(object):
                     f.write("\n")
             f.close()
 
+    def get_alarm_info_tmp(self, ith):
+        """
+        :param ith: 第i个告警信息
+        :return:
+        """
+        return pd.read_csv(f'./data/new_train/{ith}.csv', index_col='Unnamed: 0')
 
-if __name__ == '__main__':
-    ainfo = alarm_info()
+
+def preporcess():
+    ainfo = AlarmInfo()
+    # 更新训练集
+    ainfo.add_feature()
+    # 对告警信息进行分类和存储
     ainfo.get_alarm_type()
     ainfo.get_alarm_info()

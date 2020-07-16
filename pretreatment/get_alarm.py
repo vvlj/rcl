@@ -5,14 +5,15 @@ import re
 path_dct = {'test': './data/test/%d',
             'train': './data/train/%d',
             "new_train": './data/new_train/%d',
+            "new_test": './data/new_train/%d',
             'node_list': [list(range(0, 100)), list(range(0, 20))]}
 
 
 class AlarmInfo(object):
-    def __init__(self):
+    def __init__(self, flag="train"):
         self.alarm_type = {}
         self.alarm_list = []
-        self.flag = "train"
+        self.flag = flag
         self.train = None
         self.label_list = None
         self.label = LabelEncoder()
@@ -25,7 +26,7 @@ class AlarmInfo(object):
         对数据进行特征处理,并改写数据集
         :return:
         """
-        for j in path_dct["node_list"][0]:
+        for j in path_dct["node_list"][self.flag == 'test']:
             self.train = pd.read_csv(path_dct[self.flag] % j + ".csv", encoding="utf-8")
             for i in self.train["triggername"].tolist():
                 self.name.append(i.split(" ", 1)[0])
@@ -57,7 +58,10 @@ class AlarmInfo(object):
                                            'ping延迟时间持续3分钟大于100ms': 'ping延迟时间长'}, regex=True, inplace=True)
             self.train.drop(["triggername"], axis=1, inplace=True)
             self.coding()
-            self.train.to_csv(f"./data/new_train/{j}.csv", encoding="utf-8", index=False)
+            if self.flag == 'train':
+                self.train.to_csv(f"./data/new_train/{j}.csv", encoding="utf-8", index=False)
+            else:
+                self.train.to_csv(f"./data/new_test/{j}.csv", encoding="utf-8", index=False)
             self.name = []
             self.trigger = []
 
@@ -77,7 +81,7 @@ class AlarmInfo(object):
         对告警信息进行分词、过滤、提取关键信息并编号
         :return: {label:告警信息类型}
         """
-        for i in path_dct["node_list"][0]:
+        for i in path_dct["node_list"][self.flag == 'test']:
             for j in pd.read_csv(path_dct[self.flag] % i + ".csv", encoding="utf-8")["triggername"]:
                 self.alarm_info.append(j.split(" ", 1)[1])
         df = pd.DataFrame(self.alarm_info)
@@ -109,7 +113,7 @@ class AlarmInfo(object):
         组合告警信息列表
         :return: [timestamp, sys, node, alarm_type]
         """
-        for j in path_dct["node_list"][0]:
+        for j in path_dct["node_list"][self.flag == 'test']:
             self.train = pd.read_csv(path_dct["new_train"] % j + ".csv", encoding="utf-8")
             with open(f"./data/alarm_infolist/{j}.txt", "a") as f:
                 for row in self.train.iterrows():
@@ -122,13 +126,16 @@ class AlarmInfo(object):
         :param ith: 第i个告警信息
         :return:
         """
-        return pd.read_csv(f'./data/new_train/{ith}.csv', index_col='Unnamed: 0')
+        if self.flag == 'train':
+            return pd.read_csv(f'./data/new_train/{ith}.csv', index_col='Unnamed: 0')
+        return pd.read_csv(f'./data/new_test/{ith}.csv', index_col='Unnamed: 0')
 
 
 def preporcess():
     ainfo = AlarmInfo()
     # 更新训练集
     ainfo.add_feature()
+    AlarmInfo("test").add_feature()
     # 对告警信息进行分类和存储
-    ainfo.get_alarm_type()
-    ainfo.get_alarm_info()
+    # ainfo.get_alarm_type()  #  暂不需要
+    # ainfo.get_alarm_info()  #  暂不需要

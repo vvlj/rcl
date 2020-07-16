@@ -15,7 +15,7 @@ plt.rcParams['axes.unicode_minus']=False
 train_path_lst = range(100)  # 预处理后的数据位置
 ainfo = AlarmInfo()
 
-# preporcess()  # 预处理
+preporcess()  # 预处理
 # draw_topology_local(0)
 
 # 频率分布图；不同数据集告警频率的分布是相似的吗？...节点间的调用链难以识别，根因必定是根节点
@@ -91,16 +91,20 @@ fe = FeatureEn()
 # g = estimate_cpdag(skel_graph=g, sep_set=sep_set)
 # draw_topology(g.nodes, g.edges, root=node)
 
-for i in range(100):
-    if i == 17:
-        continue
 
-    time_feature, node = fe.get_time_feature(i, 5, False)
-    plt.title(str(node))
-    sns.distplot(abs(time_feature.corr()).sum())
-    plt.savefig(f'{i}.png')
-    plt.show()
+# #  分布断层
+# for i in range(100):
+#     if i == 17:
+#         continue
+#
+#     time_feature, node = fe.get_time_feature(i, 5, False)
+#     plt.title(str(node))
+#     sns.distplot(abs(time_feature.corr()).sum())
+#     plt.savefig(f'{i}.png')
+#     plt.show()
 
 # time_feature, node = fe.get_time_feature(0, 5, False)
 # a = abs(time_feature.corr()).sum()
 # b = a[a > a.describe()['75%']].index
+
+

@@ -14,8 +14,8 @@ def draw_from_root(alarm_data):
 
 def round_time(ts, delta):
     """时间向下取整"""
-    t = datetime.datetime.strptime(ts, '%Y-%m-%d %H:%M:%S')
-    return str(t - datetime.timedelta(seconds=t.second % delta))
+    # t = datetime.datetime.strptime(ts, '%Y-%m-%d %H:%M:%S')
+    return str(ts - datetime.timedelta(seconds=ts.second % delta))
 
 
 # 原数据 -> 每个时段数据-> 多个拓扑图
@@ -46,6 +46,7 @@ def get_time_feature(ith, delta=30, filtering=True):
     ainfo = AlarmInfo()
     alarm_info = ainfo.get_alarm_info_tmp(ith)
     # 1. 时间段向下取整
+    alarm_info['time'] = pd.to_datetime(alarm_info['time'])
     alarm_info['time'] = alarm_info['time'].apply(round_time, delta=delta)
     # 2. 筛选出频次高的
     if filtering:
@@ -69,8 +70,9 @@ def get_time_feature(ith, delta=30, filtering=True):
 
 
 class FeatureEn:
-    def __init__(self):
-        self.ainfo = AlarmInfo()
+    def __init__(self, flag='train'):
+        self.flag = flag
+        self.ainfo = AlarmInfo(flag)
         self.edge_set = set()
         for node, to_nodes in get_topology_node_edge_dct().items():
             for to_node in to_nodes:
@@ -85,6 +87,7 @@ class FeatureEn:
         for i, node in enumerate(set(alarm_info['node_name'])):
             node_index_dct[node] = i
         # 1. 时间段向下取整
+        alarm_info['time'] = pd.to_datetime(alarm_info['time'])
         alarm_info['time'] = alarm_info['time'].apply(round_time, delta=delta)
         time_feature = np.zeros((len(alarm_info['time'].unique()), len(set(alarm_info['node_name']))), dtype=int)
         for i, (t, group) in enumerate(alarm_info.groupby('time')):
@@ -99,9 +102,12 @@ class FeatureEn:
             else:
                 for node in nodes:
                     time_feature[i, node_index_dct[node]] = 1
-        if sum(alarm_info['is_root']):
-            root = node_index_dct[alarm_info[alarm_info['is_root'] == 1]['node_name'].values[0]]
+        if self.flag == 'train':
+            if sum(alarm_info['is_root']):
+                root = alarm_info[alarm_info['is_root'] == 1]['node_name'].values[0]
+            else:
+                root = None
+            print(root)
+            return pd.DataFrame(time_feature, columns=node_index_dct.keys()), root
         else:
-            root = None
-        print(root)
-        return pd.DataFrame(time_feature, columns=node_index_dct.keys()), root
+            return pd.DataFrame(time_feature, columns=node_index_dct.keys())

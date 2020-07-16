@@ -1,74 +1,41 @@
 from featuer.spread import SpreadNetwork
-from myfunc.matplot import *
-import seaborn as sns
-from sklearn.cluster import DBSCAN
-import numpy as np
 import pandas as pd
-
-# for i in range(100):
-#     try:
-#         snw = SpreadNetwork(i)
-#         cost_dct = snw.get_cost_dct(2, True)
-#         cost_df = pd.DataFrame(cost_dct.items(), columns=['node', 'cost'])
-#         nodes = set(cost_df['node'][cost_df['cost'] > cost_df['cost'].describe()['75%']])
-#         # edges = []
-#         # for node in nodes:
-#             # edges.extend((node, adjoin) for adjoin in set(snw.node_edge_dct[node]) & nodes)
-#         # snw.draw(list(nodes), edges)
-#
-#         # 分类特征
-#         # sns.distplot(list(cost_dct.values()))
-#         # plt.title(f'{i}_{str(snw.root)}')
-#         # plt.savefig(f'./data/eda/cost_weight_{i}.png')
-#         # plt.show()
-#     except ValueError:
-#         print(i)
+from pretreatment.feat_en import FeatureEn
+max_rank = 15
+time_window = 5
 
 
-# 根因节点的特性：传播路径长，出现时间早， 试试二分法
-#
-# snw = SpreadNetwork(0)
-# cost_dct = snw.get_cost_dct(2, True)
+class RootLocation:
+    def __init__(self):
+        pass
+
+    def fix(self, i):
+        pass
+
+    def predict(self, i, flag='test'):
+        snw = SpreadNetwork(i, flag)
+        cost_dct = snw.get_cost_dct(12, True)
+        # 合并后比较
+        if flag == 'test':
+            time_feature = FeatureEn(flag).get_time_feature(i, time_window, False)
+        else:
+            time_feature = FeatureEn(flag).get_time_feature(i, time_window, False)[0]
+        corr = abs(time_feature.corr()).sum()
+        bind_lst = []
+        for node, cost in cost_dct.items():
+            bind_lst.append([node, cost + corr[node]])  # 四则运算试试
+        bind_df = pd.DataFrame(bind_lst, columns=['node', 'cost'])
+        bind_df.sort_values('cost', ascending=False, inplace=True)
+        nodes = set(bind_df['node'][:max_rank])
+        edges = []
+        for node in nodes:
+            edges.extend((node, adjoin) for adjoin in set(snw.node_edge_dct[node]) & nodes)
+        snw.draw(list(nodes), edges)
+        return nodes, edges, bind_df['node'].iloc[0]
+
+    def _get_root(self):
+        pass
 
 
-# 最大跳数选择
-def max_jump_select():
-    snw_lst = []
-    for i in range(100):
-        snw_lst.append(SpreadNetwork(i))
-    total_rank_lst = []
-    for max_jump in range(100):
-        total_rank = 0
-        for i in range(100):
-            snw = snw_lst[i]
-            if snw.root is None:
-                continue
-            cost_dct = snw.get_cost_dct(max_jump, True)
-            cost_df = pd.DataFrame(cost_dct.items(), columns=['node', 'cost'])
-            cost_df.sort_values('cost', inplace=True, ascending=False)
-            total_rank += list(cost_df['node']).index(snw.root)
-        total_rank_lst.append(total_rank)
-    min_ = min(total_rank_lst)
-    print(min_)
-    return total_rank_lst.index(min_)
-
-
-# a = max_jump_select()； print(a)
-rank_lst = []
-for i in range(100):
-    snw = SpreadNetwork(i)
-    if snw.root is None:
-        continue
-    cost_dct = snw.get_cost_dct(12, True)
-    cost_df = pd.DataFrame(cost_dct.items(), columns=['node', 'cost'])
-    cost_df.sort_values('cost', inplace=True, ascending=False)
-    rank_lst.append([cost_df[cost_df['node']==snw.root]['cost'].values[0], list(cost_df['node']).index(snw.root), snw.reason])
-    # rank = list(cost_df['node']).index(snw.root)
-    # if rank < 5:
-    #     nodes = set(cost_df['node'][:20])
-    #     edges = []
-    #     for node in nodes:
-    #         edges.extend((node, adjoin) for adjoin in set(snw.node_edge_dct[node]) & nodes)
-    #     snw.draw(list(nodes), edges)
-    #     input()
-a = pd.DataFrame(rank_lst).sort_values(1)
+rl = RootLocation()
+snw, nodes, bind_df = rl.predict(0)

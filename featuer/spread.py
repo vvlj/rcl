@@ -4,7 +4,6 @@ from pretreatment.topology import get_topology_node_edge_dct
 import pandas as pd
 import matplotlib.pyplot as plt
 import networkx as nx
-import numpy as np
 
 # 用来正常显示中文标签，SimHei是字体名称，字体必须再系统中存在，字体的查看方式和安装第三部分
 plt.rcParams['font.sans-serif']=['SimHei']
@@ -15,19 +14,20 @@ plt.rcParams['axes.unicode_minus']=False
 # 构建传播图
 class SpreadNetwork(Network):
     """一个数据集，一个传播图"""
-    def __init__(self, i, max_time=None):
+    def __init__(self, i, flag='train', max_time=None):
         """
         :param i:
         :param max_time: 单位是秒
         """
         self.i = i
+        self.flag = flag
         super().__init__()
         # 1. 每个节点的最早出现时间
-        info_df = AlarmInfo().get_alarm_info_tmp(i)
-        if sum(info_df['is_root']):
-            self.root, self.reason = info_df[info_df['is_root'] == 1][['node_name', 'trigger']].values[0]
-        else:
-            self.root, self.reason = None, None
+        info_df = AlarmInfo(flag).get_alarm_info_tmp(i)
+        self.root, self.reason = None, None
+        if self.flag == 'train':
+            if sum(info_df['is_root']):
+                self.root, self.reason = info_df[info_df['is_root'] == 1][['node_name', 'trigger']].values[0]
         first_time_dct = {}
         info_df['time'] = pd.to_datetime(info_df['time'])
         min_date = info_df['time'].min()
@@ -86,18 +86,25 @@ class SpreadNetwork(Network):
             nx.draw(mg, with_labels=True)
         else:
             node_color = ['blue'] * len(nodes)
-            node_color[nodes.index(self.root)] = 'red'
+            if self.root in nodes:
+                node_color[nodes.index(self.root)] = 'red'
             nx.draw(mg, with_labels=True, node_color=node_color)
         plt.savefig(f'./data/eda/spread_net{self.i}.png')
         plt.show()
 
     def small_network(self, nodes):
-        to_del = set(self.nodes) ^ set(nodes)
-        for node in to_del:
-            self.nodes.remove(node)
-            adjoin_lst = self.node_edge_dct[node] & (to_del ^ {node})
-            for adjoin in adjoin_lst:
-                self.edges.remove((node, adjoin))
-                del self.edge_weight_dct[(node, adjoin)]
-            del self.node_edge_dct[node]
-            del self.node_weight_dct[node]
+        """出错，弃用"""
+        # nodes = set(nodes)
+        # edges = []
+        # for node in nodes:
+        #     rest_adjoin_lst = self.node_edge_dct[node] & nodes
+        #     edges.extend((node, adjoin) for adjoin in rest_adjoin_lst)
+        #     self.node_edge_dct[node] = rest_adjoin_lst
+        # self.nodes = list(nodes)
+        # self.edges = edges
+        # for edge in set(edges) ^ self.edge_weight_dct.keys():
+        #     del self.edge_weight_dct[edge]
+        # for node in nodes ^ self.node_edge_dct.keys():
+        #     del self.node_edge_dct[node]
+        # for node in nodes ^ self.node_weight_dct.keys():
+        #     del self.node_weight_dct[node]

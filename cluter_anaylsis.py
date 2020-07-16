@@ -1,5 +1,4 @@
-from pretreatment.get_alarm import AlarmInfo
-from pretreatment.feat_en import get_time_data, get_time_feature, get_time_freq_feature
+from pretreatment.feat_en import get_time_freq_feature
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import calinski_harabaz_score

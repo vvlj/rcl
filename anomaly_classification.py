@@ -5,6 +5,7 @@ from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
 from sklearn.externals import joblib
 
+
 # 用来正常显示中文标签，SimHei是字体名称，字体必须再系统中存在，字体的查看方式和安装第三部分
 plt.rcParams['font.sans-serif']=['SimHei']
 # 用来正常显示负号
@@ -26,7 +27,7 @@ def load_data():
 
 
 def trans_feature(time_feature):
-    return abs(time_feature.corr()).sum().value_counts(False, bins=20).values
+    return abs(time_feature.corr()).sum().value_counts(False, sort=False, bins=20).values
 
 
 def clf_score():
@@ -74,5 +75,7 @@ if __name__ == '__main__':
     # 1. 创建./data/new_test
     # 2. 调用get_alarm.preporcess
     dump_model()
-    for i in range(20):
-        print(get_bar_data(i)[1])
+    # for i in range(20):
+    #     x, y = get_bar_data(i)
+    #     plt.bar(range(len(x), y))
+    #     plt.show()

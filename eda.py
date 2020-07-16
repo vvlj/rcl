@@ -1,12 +1,7 @@
-from pretreatment.topology import draw_topology_test, draw_topology_local, draw_topology, get_node_edge_second_level
-from pretreatment.get_alarm import preporcess, AlarmInfo
-from pretreatment.feat_en import get_time_data, get_time_feature, get_time_freq_feature, FeatureEn
+from pretreatment.get_alarm import AlarmInfo
+from pretreatment.feat_en import FeatureEn
 import matplotlib.pyplot as plt
 import pandas as pd
-import datetime
-import numpy as np
-from myfunc.matplot import *
-import seaborn as sns
 
 
 # 传播拓扑图， 单位时间绘制一次
@@ -61,14 +56,6 @@ def draw_time_scatter_test():
         draw_time_scatter(i)
 
 
-
-# draw_time_feature(0)
-# draw_time_scatter_test()  # 第一次出现的时间散点图
-
-
-# 传播特征
-
-# featen = FeatureEn()
-# time_feature, root = featen.get_time_feature(0, 5, False)
-
-
+if __name__ == '__main__':
+    draw_time_feature(0)
+    draw_time_scatter_test()  # 第一次出现的时间散点图
